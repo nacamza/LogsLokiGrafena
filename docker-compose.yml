@@ -1,11 +1,24 @@
 version: "3.4"
 
 services:
-  my-nginx-service:
+  nginx1:
     image: nginx
-    container_name: my-nginx-service
+    container_name: nginx1
     ports:
       - 8000:80
+    environment:
+      - FOO=bar
+    logging:
+      driver: loki
+      options:
+        loki-url: http://localhost:3100/loki/api/v1/push
+        loki-external-labels: job=dockerlogs,owner=ruan,environment=development
+
+  nginx2:
+    image: nginx
+    container_name: nginx2
+    ports:
+      - 4000:80
     environment:
       - FOO=bar
     logging:
@@ -21,6 +34,7 @@ services:
     ports:
     - "3000:3000"
 
+#Logs de los dockers
   loki:
    image: grafana/loki:v1.3.0
    volumes:
@@ -30,3 +44,10 @@ services:
      - -config.file=/etc/config/loki.yaml
    ports:
      - "3100:3100"
+     
+#Logs del sistema
+  promtail:
+    image: grafana/promtail:1.5.0
+    volumes:
+      - /var/log:/var/log
+    command: -config.file=/etc/promtail/docker-config.yaml
